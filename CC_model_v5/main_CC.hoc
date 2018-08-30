@@ -1,0 +1,77 @@
+load_file("nrngui.hoc")
+
+//load_file("current_source.ses")
+//load_file("main_for_MC_test_w_parasitic.ses")
+load_file("bjd1252_axon.hoc")
+load_file("CC_plus_PIP.ses")
+load_file("filter_settings.hoc")
+
+
+
+proc set_CPN(){
+desired_CPN=$01
+if (desired_CPN == 0){
+LinearCircuit[0].Acpn_Gain=(1e-9/1000)/LinearCircuit[0].Ccpn
+}else{
+LinearCircuit[0].Acpn_Gain=(desired_CPN/1000)/LinearCircuit[0].Ccpn
+}
+}
+
+proc set_BB(){
+desired_BB=$01
+if (desired_BB == 0){
+LinearCircuit[0].A_BB_Gain=1e-9
+}else{
+LinearCircuit[0].A_BB_Gain=desired_BB
+}
+}
+
+
+
+proc set_protocol(){
+//set conversion factors Vcmd(in mV)=desired i_step(in pA)*conversion_factor
+l_epoch=266.7//in the protocol used for the constraining
+desired_current=$01
+if(LinearCircuit[0].Ro == 50){	conversion_factor=.05}
+if(LinearCircuit[0].Ro  == 500){	conversion_factor=.5}
+if(LinearCircuit[0].Ro == 5000){	conversion_factor=5 }
+//set Clampex style first_holding_lenght
+LinearCircuit[0].Vcmd_dur0=l_epoch/64
+LinearCircuit[0].Vcmd_amp2=desired_current*conversion_factor
+}
+
+set_protocol(-200)
+
+set_filter(100,100)
+
+create axon1, axon2
+
+axon1.L = 1000
+axon1.nseg = 3
+axon1.diam = 0.5
+connect axon1(1), axon[2](1)
+
+axon2.L = 1000
+axon2.nseg = 3
+axon2.diam = 0.5
+connect axon2(1), axon[7](1)
+
+
+
+forall{
+	nseg *= 19
+	cm = 1
+	insert pas
+	g_pas = 1/(1.2989e+5)
+	Ra = 197.6
+	e_pas = -80
+	diam *= 0.5586
+	insert hh
+}
+
+
+set_CPN(7.46)
+set_BB(250)
+set_protocol(60)
+
+
